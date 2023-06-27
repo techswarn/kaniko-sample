@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko-docker
+spec:
+  restartPolicy: Never
+  containers:
+    - name: kanikonew
+      image: gcr.io/kaniko-project/executor:latest
+      imagePullPolicy: Always
+      args:
+        [
+          "--dockerfile=Dockerfile",
+          "--context=git://github.com/techswarn/react-docker-nginx",
+          "--destination=swarntech/kaniko-demo:latest",
+        ]
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+        - name: dockerfile-storage
+          mountPath: /workspace
+  volumes:
+    - name: docker-config
+      projected:
+        sources:
+          - secret:
+              name: my-docker-secret
+              items:
+                - key: .dockerconfigjson
+                  path: config.json
+    - name: dockerfile-storage
+      persistentVolumeClaim:
+        claimName: dockerfile-pvc
